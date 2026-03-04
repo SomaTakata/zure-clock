@@ -154,7 +154,7 @@ export default function Home() {
   });
 
   return (
-    <div className="h-dvh w-screen overflow-hidden bg-white p-6 pb-0 text-black font-['Helvetica_Neue',Helvetica,Arial,sans-serif]">
+    <div className="h-dvh w-screen overflow-hidden bg-white p-6 pb-24 text-black font-['Helvetica_Neue',Helvetica,Arial,sans-serif]">
       <header className="flex items-center justify-between border-b-2 border-black pb-6">
         <div className="text-[42px] leading-none font-bold tracking-[-1.5px]">ZURE-CLOCK</div>
         <div ref={optionCardWrapperRef} className="group relative">
@@ -234,7 +234,7 @@ export default function Home() {
           <div className="ml-3 text-base font-bold tracking-[0.5px] uppercase">{ampm}</div>
         </div>
 
-        <div className="my-6 h-px w-full origin-left bg-black" />
+        <div className="mb-6 h-px w-full origin-left bg-black" />
 
         <div className="mb-6 grid grid-cols-1 gap-4">
           <div className="flex flex-col gap-1">
@@ -251,26 +251,22 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="relative mb-6 h-30 w-full overflow-hidden border border-black">
+        <div className="relative mb-6 h-20 w-full overflow-hidden border border-black">
           <div className="absolute top-1/2 left-1/2 z-10 h-full w-0.5 -translate-x-1/2 -translate-y-1/2 bg-black" />
           <div
-            className="absolute top-1/2 left-0 flex h-px w-[200%] -translate-y-1/2 items-center bg-black"
+            className="absolute top-1/2 left-0 flex w-[200%] -translate-y-1/2 items-center"
             style={{ transform: `translate(${currentPos}px, -50%)` }}
           >
             {ticks.map((sec, idx) => (
               <div key={`${sec}-${idx}`} className="relative mr-7.25 h-5 w-px bg-black">
-                <span className="absolute -top-6 -left-1.5 text-[10px] font-bold">{sec}</span>
+                <span className="absolute top-1/2 -left-1.5 -translate-y-1/2 text-[10px] font-bold">
+                  {sec}
+                </span>
               </div>
             ))}
           </div>
         </div>
-
-        {/* <p className="mb-6 max-w-[90%] text-base leading-[1.4]">
-          Precision timekeeping instrument designed for minimal latency. Synchronized with
-          atomic standards for accurate temporal measurement.
-        </p> */}
-
-        <footer className="mt-auto flex justify-end border-t border-black pt-6">
+        <footer className="fixed right-0 bottom-0 left-0 z-20 flex justify-end border-t border-black bg-white px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <a
             href="https://soma-takata.vercel.app/"
             target="_blank"
