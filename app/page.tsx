@@ -31,13 +31,14 @@ export default function Home() {
   const [isOptionCardOpen, setIsOptionCardOpen] = useState(false);
   const [isRandomAheadEnabled, setIsRandomAheadEnabled] = useState<boolean>(() => {
     if (typeof window === "undefined") {
-      return false;
+      return true;
     }
 
     try {
-      return window.localStorage.getItem(RANDOM_AHEAD_ENABLED_STORAGE_KEY) === "enabled";
+      const saved = window.localStorage.getItem(RANDOM_AHEAD_ENABLED_STORAGE_KEY);
+      return saved === null ? true : saved === "enabled";
     } catch {
-      return false;
+      return true;
     }
   });
   const [randomAheadMinutes, setRandomAheadMinutes] = useState<number>(() => getRandomOffsetMinutes());
