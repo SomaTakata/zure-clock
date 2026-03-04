@@ -28,6 +28,7 @@ function formatUtcOffset(date: Date): string {
 export default function Home() {
   const [now, setNow] = useState<Date>(() => new Date());
   const [trackWidth, setTrackWidth] = useState(0);
+  const [isOptionCardOpen, setIsOptionCardOpen] = useState(false);
   const [isRandomAheadEnabled, setIsRandomAheadEnabled] = useState<boolean>(() => {
     if (typeof window === "undefined") {
       return false;
@@ -41,6 +42,7 @@ export default function Home() {
   });
   const [randomAheadMinutes, setRandomAheadMinutes] = useState<number>(() => getRandomOffsetMinutes());
   const lastWindowRef = useRef<number | null>(null);
+  const optionCardWrapperRef = useRef<HTMLDivElement | null>(null);
 
   const handleToggleRandomAhead = () => {
     setIsRandomAheadEnabled((prev) => {
@@ -98,6 +100,29 @@ export default function Home() {
     return () => window.clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    const handleOutsidePointer = (event: MouseEvent | TouchEvent) => {
+      if (!isOptionCardOpen) {
+        return;
+      }
+
+      const wrapper = optionCardWrapperRef.current;
+      const target = event.target as Node | null;
+
+      if (wrapper && target && !wrapper.contains(target)) {
+        setIsOptionCardOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsidePointer);
+    document.addEventListener("touchstart", handleOutsidePointer);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsidePointer);
+      document.removeEventListener("touchstart", handleOutsidePointer);
+    };
+  }, [isOptionCardOpen]);
+
   const ticks = useMemo(() => {
     return Array.from({ length: 240 }, (_, idx) => {
       const second = idx % 60;
@@ -129,13 +154,16 @@ export default function Home() {
   });
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-white p-6 pb-0 text-black font-['Helvetica_Neue',Helvetica,Arial,sans-serif]">
+    <div className="h-dvh w-screen overflow-hidden bg-white p-6 pb-0 text-black font-['Helvetica_Neue',Helvetica,Arial,sans-serif]">
       <header className="flex items-center justify-between border-b-2 border-black pb-6">
-        <div className="text-[42px] leading-none font-bold tracking-[-1.5px]">Time</div>
-        <div className="group relative">
+        <div className="text-[42px] leading-none font-bold tracking-[-1.5px]">ZURE-CLOCK</div>
+        <div ref={optionCardWrapperRef} className="group relative">
           <button
             type="button"
             aria-label="Random ahead clock options"
+            aria-expanded={isOptionCardOpen}
+            aria-haspopup="dialog"
+            onClick={() => setIsOptionCardOpen((prev) => !prev)}
             className={`relative flex h-8 w-10 cursor-pointer items-center justify-center border transition-all duration-200 ${
               isRandomAheadEnabled
                 ? "border-black bg-black text-white"
@@ -151,7 +179,13 @@ export default function Home() {
             ) : null}
           </button>
 
-          <div className="pointer-events-none absolute top-10 right-0 z-30 w-90 translate-y-1 border border-black bg-white p-4 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100">
+          <div
+            className={`absolute top-10 right-0 z-30 w-90 border border-black bg-white p-4 transition-all duration-200 ${
+              isOptionCardOpen
+                ? "pointer-events-auto translate-y-0 opacity-100"
+                : "pointer-events-none translate-y-1 opacity-0 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100"
+            }`}
+          >
             <p className="text-[11px] leading-[1.45]">
               You can use a clock that displays a time randomly set 10–20 minutes ahead of
               the actual time. The time offset changes randomly every 10 minutes, preventing
@@ -190,7 +224,7 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="flex h-[calc(100%-92px)] flex-col pt-6">
+      <div className="flex flex-1 flex-col pt-6">
         <div className="relative mb-6">
           <div className="-ml-1.5 flex items-baseline text-[clamp(90px,20vw,120px)] leading-[0.9] font-bold tracking-[-6px]">
             <span>{hours12}</span>
