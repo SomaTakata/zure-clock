@@ -1,36 +1,165 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ZURE-CLOCK サービス仕様書
 
-## Getting Started
+- 文書バージョン: 1.0
+- 最終更新日: 2026-03-17
+- 対象実装: `app/page.tsx` / `app/layout.tsx`（Next.js App Router 構成）
 
-First, run the development server:
+## 1. サービス概要
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+ZURE-CLOCK は、現在時刻を表示するシンプルな Web クロックサービスです。
+通常の時刻表示に加えて、実時刻よりランダムで 10〜20 分先行した時刻を表示する「ランダム進み時計」機能を提供します。
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+この機能により、ユーザーが無意識に早め行動を取りやすくなることを狙います。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 2. 目的
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- 遅刻防止・行動の前倒しを促進する
+- 常時視認しやすいミニマルな時計 UI を提供する
+- 余計な設定を最小化し、1クリックで機能 ON/OFF できる操作性を実現する
 
-## Learn More
+## 3. 想定利用者
 
-To learn more about Next.js, take a look at the following resources:
+- 日常的に「数分の遅れ」を防ぎたい個人ユーザー
+- デスクトップやタブ常駐で時計を見続けるユーザー
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 4. 提供機能
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 4.1 現在時刻表示
 
-## Deploy on Vercel
+- 12時間表記で時刻を表示（`h:mm` + `AM/PM`）
+- 秒・ミリ秒を内部的に計算し、水平目盛りトラックの位置を滑らかに更新
+- `requestAnimationFrame` による高頻度更新
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 4.2 日付表示
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 表示ロケール: `en-US`
+- 形式: `weekday, month day, year`（例: Monday, March 17, 2026）
+
+### 4.3 タイムゾーン情報表示
+
+- システムローカルタイムゾーンを `UTC±HH:MM Standard` 形式で表示
+
+### 4.4 ランダム進み時計（中核機能）
+
+- ON の場合、表示時刻 = 実時刻 + ランダムオフセット
+- オフセット範囲: 10〜20 分（整数）
+- オフセット更新周期: 10 分ごと
+- 更新時刻判定は 10 分ウィンドウ単位で実施し、15秒間隔で再評価
+- OFF の場合は実時刻をそのまま表示
+
+### 4.5 オプションカード UI
+
+- ヘッダー右上のオプションボタンで開閉
+- カード内で機能説明と ON/OFF 切り替えを提供
+- カード外クリック（またはタップ）で自動クローズ
+
+### 4.6 設定の永続化
+
+- 保存先: `localStorage`
+- キー: `zure-clock:random-ahead-enabled`
+- 保存値:
+	- `enabled`
+	- `disabled`
+- 初期値:
+	- 保存値がない場合は `enabled`
+	- ストレージ利用不可時も安全側で `enabled`
+
+## 5. 画面仕様
+
+### 5.1 レイアウト
+
+- 上部: サービス名 + オプション操作
+- 中央: 大型時刻表示、補助情報（クロノメータ名・日付・UTCオフセット）
+- 下部: 秒トラック（センターライン基準）
+- 最下部固定: 外部リンク（ポートフォリオ）
+
+### 5.2 デザイン要件
+
+- 背景: 白 / テキスト: 黒 のミニマル表現
+- 欧文ベースの視認性重視タイポグラフィ
+- コロンの点滅アニメーション（1秒周期）
+
+### 5.3 レスポンシブ動作
+
+- 画面幅変更時に秒トラック幅を再計算
+- ビューポート全体（`h-dvh`, `w-screen`）を利用
+
+## 6. 機能要件（詳細）
+
+1. 時刻はクライアント端末のシステム時刻を参照すること。
+2. ランダム進み時計が ON の場合、表示時刻にのみオフセットを適用し、実時刻データは保持すること。
+3. オフセット値は 10〜20 の範囲でランダム選択すること。
+4. 同一 10 分ウィンドウ内ではオフセットを固定し、次ウィンドウで再抽選すること。
+5. ON/OFF 状態はページ再読み込み後も保持されること。
+6. ストレージアクセス失敗時にアプリがクラッシュしないこと。
+
+## 7. 非機能要件
+
+### 7.1 パフォーマンス
+
+- 高頻度描画が体感的に滑らかであること
+- 不要な再計算を避けるため、定数配列（秒目盛り）をメモ化すること
+
+### 7.2 可用性・耐障害性
+
+- `localStorage` 例外発生時も機能継続すること
+
+### 7.3 セキュリティ
+
+- 認証・個人情報の取り扱いなし
+- 外部リンクは `target="_blank"` 時に `rel="noopener noreferrer"` を付与
+
+### 7.4 アクセシビリティ
+
+- オプションボタンに `aria-label` / `aria-expanded` / `aria-haspopup` を設定
+- 外部リンクに `aria-label` を設定
+
+## 8. 技術仕様
+
+- フレームワーク: Next.js 16（App Router）
+- 言語: TypeScript / React 19
+- スタイリング: Tailwind CSS v4
+- アイコン: `lucide-react`
+- フォント: `next/font` 経由で Geist を利用
+- 実行環境: ブラウザ（クライアントコンポーネント）
+
+## 9. データ仕様
+
+### 9.1 内部状態（抜粋）
+
+- `now: Date` 現在時刻
+- `isRandomAheadEnabled: boolean` 機能有効状態
+- `randomAheadMinutes: number` 現在の進み幅
+- `trackWidth: number` 秒トラック描画幅
+- `isOptionCardOpen: boolean` オプションカード表示状態
+
+### 9.2 永続データ
+
+- ストレージ種別: `localStorage`
+- 1キーのみ使用（前述）
+
+## 10. 既知の制約
+
+- サーバー時刻ではなく、端末時刻に依存
+- 多言語化は未実装（表示文言は英語/日本語が混在）
+- ユーザーがオフセット値を手動指定する機能は未提供
+
+## 11. 起動・開発手順
+
+1. 依存関係をインストール
+2. 開発サーバーを起動
+3. `http://localhost:3000` を表示
+
+利用可能なスクリプト:
+
+- `npm run dev` 開発起動
+- `npm run build` 本番ビルド
+- `npm run start` 本番起動
+- `npm run lint` 静的解析
+
+## 12. 今後の拡張候補
+
+- オフセット範囲のユーザー設定化（例: 5〜15 分）
+- 完全日本語 UI への統一
+- PWA 化（ホーム画面常駐・オフライン対応）
+- テーマ切り替え（ライト/ダーク）
