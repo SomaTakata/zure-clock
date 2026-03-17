@@ -4,6 +4,11 @@
 - 最終更新日: 2026-03-17
 - 対象実装: `app/page.tsx` / `app/layout.tsx`（Next.js App Router 構成）
 
+## ピッチ資料（PDF）
+
+- リポジトリ内ファイル: [Zure Clock.pdf](./public/Zure%20Clock.pdf)
+- アプリ起動時の公開URL: [/Zure Clock.pdf](/Zure%20Clock.pdf)
+
 ## 1. サービス概要
 
 ZURE-CLOCK は、現在時刻を表示するシンプルな Web クロックサービスです。
