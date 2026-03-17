@@ -1,6 +1,7 @@
 "use client";
 
 import { Option } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const TICK_SPACING = 30;
@@ -268,19 +269,17 @@ export default function Home() {
           </div>
         </div>
         <footer className="fixed right-0 bottom-0 left-0 z-20 flex justify-end border-t border-black bg-white px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-          <a
-            href="https://soma-takata.vercel.app/"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/slides"
             className="group inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.45px] uppercase"
-            aria-label="Open Soma Takata portfolio"
+            aria-label="Open ZURE-CLOCK slides"
           >
             <span className="inline-block h-px w-6 bg-black transition-all duration-300 group-hover:w-9" />
-            <span>Soma Takata Portfolio</span>
+            <span>ZURE-CLOCK Slides</span>
             <span className="text-[13px] leading-none transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5">
               ↗
             </span>
-          </a>
+          </Link>
         </footer>
 
       </div>

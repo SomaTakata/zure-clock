@@ -37,3 +37,48 @@ body {
 .animate-colon-blink {
   animation: colon-blink 1s step-end infinite;
 }
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .pitch-deck {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .pitch-slide {
+    min-height: 100vh !important;
+    height: 100vh !important;
+    break-after: page;
+    page-break-after: always;
+    page-break-inside: avoid;
+  }
+
+  .pitch-slide:last-of-type {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .animate-colon-blink {
+    animation: none !important;
+  }
+}
