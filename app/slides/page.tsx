@@ -1,7 +1,15 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+const RANDOM_MIN_OFFSET = 10;
+const RANDOM_MAX_OFFSET = 20;
+const OFFSET_REFRESH_WINDOW_MS = 10 * 60 * 1000;
+
+function getRandomOffsetMinutes(): number {
+  return Math.floor(Math.random() * (RANDOM_MAX_OFFSET - RANDOM_MIN_OFFSET + 1)) + RANDOM_MIN_OFFSET;
+}
 
 function pad2(value: number): string {
   return value.toString().padStart(2, "0");
@@ -19,17 +27,35 @@ function formatTime12(date: Date): { hh: string; mm: string; ampm: string } {
 
 export default function SlidesPage() {
   const [now, setNow] = useState<Date>(() => new Date());
+  const [randomAheadMinutes, setRandomAheadMinutes] = useState<number>(() => getRandomOffsetMinutes());
+  const lastWindowRef = useRef<number | null>(null);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const syncOffsetWindow = () => {
+      const windowKey = Math.floor(Date.now() / OFFSET_REFRESH_WINDOW_MS);
+
+      if (lastWindowRef.current !== windowKey) {
+        lastWindowRef.current = windowKey;
+        setRandomAheadMinutes(getRandomOffsetMinutes());
+      }
+    };
+
+    syncOffsetWindow();
+    const intervalId = window.setInterval(syncOffsetWindow, 15_000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   const real = useMemo(() => formatTime12(now), [now]);
   const zure = useMemo(() => {
-    const shifted = new Date(now.getTime() + 14 * 60 * 1000);
+    const shifted = new Date(now.getTime() + randomAheadMinutes * 60 * 1000);
     return formatTime12(shifted);
-  }, [now]);
+  }, [now, randomAheadMinutes]);
 
   return (
     <main className="pitch-deck h-dvh snap-y snap-mandatory overflow-y-auto bg-white text-black font-['Helvetica_Neue',Helvetica,Arial,sans-serif]">
@@ -54,11 +80,11 @@ export default function SlidesPage() {
 
           <div className="flex flex-col items-start gap-2">
             <div className="-ml-1 flex items-baseline text-[clamp(88px,16vw,200px)] leading-[0.9] font-bold tracking-[-0.08em]">
-              <span>{real.hh}</span>
+              <span>{zure.hh}</span>
               <span className="animate-colon-blink">:</span>
-              <span>{real.mm}</span>
+              <span>{zure.mm}</span>
             </div>
-            <p className="ml-2 text-lg font-bold tracking-[0.25em]">{real.ampm}</p>
+            <p className="ml-2 text-lg font-bold tracking-[0.25em]">{zure.ampm}</p>
           </div>
 
           <div className="mt-8 h-px w-full bg-black" />
@@ -84,11 +110,13 @@ export default function SlidesPage() {
           <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="border border-black p-6">
               <p className="text-xs font-bold tracking-[0.25em]">REAL TIME</p>
-              <p className="mt-4 text-6xl font-bold tracking-[-0.05em]">10:00</p>
+              <p className="mt-4 text-6xl font-bold tracking-[-0.05em]">{real.hh}:{real.mm}</p>
+              <p className="mt-2 text-xs font-bold tracking-[0.22em]">{real.ampm}</p>
             </div>
             <div className="border border-black bg-black p-6 text-white">
               <p className="text-xs font-bold tracking-[0.25em]">ZURE-CLOCK</p>
-              <p className="mt-4 text-6xl font-bold tracking-[-0.05em]">10:14</p>
+              <p className="mt-4 text-6xl font-bold tracking-[-0.05em]">{zure.hh}:{zure.mm}</p>
+              <p className="mt-2 text-xs font-bold tracking-[0.22em]">{zure.ampm}</p>
             </div>
           </div>
 
